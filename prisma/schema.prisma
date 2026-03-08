@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Usuarios del sistema con roles
+model Usuario {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  nombre    String
+  email     String?
+  rol       String   @default("usuario") // admin, supervisor, usuario
+  activo    Boolean  @default(true)
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  asistenciasRegistradas Asistencia[] @relation("RegistradorAsistencia")
+  sesiones               Sesion[]
+}
+
+// Sesiones de usuario
+model Sesion {
+  id        String   @id @default(cuid())
+  usuarioId String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@index([token])
+}
+
+// Grupos (clases, cursos, departamentos, etc.)
+model Grupo {
+  id          String   @id @default(cuid())
+  nombre      String
+  descripcion String?
+  color       String   @default("#10B981")
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  personas Persona[]
+
+  @@index([activo])
+}
+
+// Personas (estudiantes, empleados, participantes)
+model Persona {
+  id        String   @id @default(cuid())
+  codigo    String   @unique
+  nombre    String
+  apellido  String
+  email     String?
+  telefono  String?
+  foto      String?
+  codigoQr  String   @unique
+  activo    Boolean  @default(true)
+  grupoId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  grupo       Grupo?        @relation(fields: [grupoId], references: [id], onDelete: SetNull)
+  asistencias Asistencia[]
+
+  @@index([grupoId])
+  @@index([activo])
+  @@index([codigo])
+}
+
+// Registro de Asistencias
+model Asistencia {
+  id           String   @id @default(cuid())
+  personaId    String
+  registradoPor String?
+  tipo         String   @default("entrada") // entrada, salida
+  fecha        DateTime @default(now())
+  hora         String
+  metodo       String   @default("qr") // qr, manual
+  notas        String?
+  latitud      Float?
+  longitud     Float?
+  createdAt    DateTime @default(now())
+
+  persona    Persona   @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  registrador Usuario? @relation("RegistradorAsistencia", fields: [registradoPor], references: [id], onDelete: SetNull)
+
+  @@index([personaId])
+  @@index([fecha])
+  @@index([tipo])
+}
+
+// Configuración del sistema
+model Configuracion {
+  id                String   @id @default("default")
+  nombreInstitucion String   @default("Mi Institución")
+  logo              String?
+  logoUrl           String?  @db.Text
+  colorPrimario     String   @default("#10B981")
+  colorSecundario   String   @default("#6366F1")
+  toleranciaMinutos Int      @default(15)
+  zonaHoraria       String   @default("America/Mexico_City")
+  idioma            String   @default("es")
+  emailNotificaciones String?
+  activarNotificaciones Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Registros de actividad (auditoría)
+model Actividad {
+  id        String   @id @default(cuid())
+  usuarioId String?
+  accion    String
+  entidad   String
+  entidadId String?
+  detalles  String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([entidad])
+  @@index([createdAt])
+}
