@@ -1549,7 +1549,7 @@ export default function SistemaAsistenciaFull() {
 
                 <div>
                   <label className="text-sm text-gray-500">Logo de la Institución</label>
-                  <div className="flex gap-2 items-center">
+                  <div className="flex gap-2 items-center mt-2">
                     {configuracion?.logoUrl && (
                       <img src={configuracion.logoUrl} alt="Logo" className="w-16 h-16 object-contain border rounded" />
                     )}
@@ -1564,13 +1564,13 @@ export default function SistemaAsistenciaFull() {
                       className="hidden"
                       id="logo-upload"
                     />
-                    <label htmlFor="logo-upload">
-                      <Button variant="outline" asChild>
-                        <span className="cursor-pointer">
-                          <ImageIcon className="w-4 h-4 mr-2" /> Subir Logo
-                        </span>
-                      </Button>
-                    </label>
+                    <Button 
+                      variant="outline" 
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                    >
+                      <ImageIcon className="w-4 h-4 mr-2" /> Subir Logo
+                    </Button>
                   </div>
                 </div>
 
